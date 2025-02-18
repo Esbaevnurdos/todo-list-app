@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        border: 1px solid #ddd;
+        margin: 5px 0;
+      }
+      button {
+        margin-left: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Todo List</h2>
+    <input type="text" id="taskInput" placeholder="Enter task" />
+    <button onclick="addTask()">Add Task</button>
+    <ul id="taskList"></ul>
+
+    <script>
+      const API_URL = "https://todo-list-app-hvv4.onrender.com/tasks";
+
+      async function fetchTasks() {
+        const response = await fetch(API_URL);
+        const tasks = await response.json();
+        const taskList = document.getElementById("taskList");
+        taskList.innerHTML = "";
+        tasks.forEach((task) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+                    <span contenteditable="true" onblur="updateTask('${task.id}', this)">${task.text}</span>
+                    <button onclick="deleteTask('${task.id}')">Delete</button>
+                `;
+          taskList.appendChild(li);
+        });
+      }
+
+      async function addTask() {
+        const taskInput = document.getElementById("taskInput");
+        if (!taskInput.value) return;
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: taskInput.value }),
+        });
+        taskInput.value = "";
+        fetchTasks();
+      }
+
+      async function deleteTask(id) {
+        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        fetchTasks();
+      }
+
+      async function updateTask(id, element) {
+        await fetch(`${API_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: element.innerText }),
+        });
+      }
+
+      fetchTasks();
+    </script>
+  </body>
+</html>

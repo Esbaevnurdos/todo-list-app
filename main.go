@@ -36,6 +36,20 @@ func saveTasks() {
 	ioutil.WriteFile(filePath, file, 0644)
 }
 
+// Enable CORS middleware
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
+}
+
 // Get all tasks
 func getTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
@@ -98,9 +112,13 @@ func main() {
 
 	r := gin.Default()
 
-	r.GET("/tasks", getTasks)        // Get all tasks
-	r.POST("/tasks", createTask)     // Create new task
-	r.PUT("/tasks/:id", updateTask)  // Update a task
+	// Use CORS middleware
+	r.Use(CORSMiddleware())
+
+	// Routes
+	r.GET("/tasks", getTasks)         // Get all tasks
+	r.POST("/tasks", createTask)      // Create new task
+	r.PUT("/tasks/:id", updateTask)   // Update a task
 	r.DELETE("/tasks/:id", deleteTask) // Delete a task
 
 	r.Run(":8080") // Run server on port 8080
